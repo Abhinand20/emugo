@@ -8,7 +8,7 @@
 - `PC` is 16-bit
 - `SP` is 8-bit
 - For graphics, programs may also refer to a group of sprites representing the hexadecimal digits 0 through F. These sprites are 5 bytes long, or 8x5 pixels. The data should be stored in the interpreter area of Chip-8 memory (0x000 to 0x1FF).
-
+- CHIP-8 sprites are always eight pixels wide and between one to fifteen pixels high.
 
 Memory Map:
 ```text

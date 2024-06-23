@@ -47,13 +47,12 @@ func validateFlags() error {
 
 func parseHexInstruction(inst []byte, idx int) Instruction {
 	var instruction Instruction
-	upperNibble := (inst[0] >> 4)
 	instruction.Opcode = binary.BigEndian.Uint16(inst)
+	opcode := common.ParseOpcode(instruction.Opcode)
 	instruction.Address = startAddr + uint16(idx)
-	switch upperNibble {
+	switch opcode.NibbleUpper {
 	case 0x00: {
-		lowerByte := inst[1]
-		switch lowerByte {
+		switch opcode.LowerByte {
 		case 0xE0: {
 			instruction.Name = "CLS"
 		}
@@ -65,34 +64,34 @@ func parseHexInstruction(inst []byte, idx int) Instruction {
 	}
 	case 0x01: {
 		instruction.Name = "JP"
-		leftOp := instruction.Opcode & (0xFFF)
+		leftOp := opcode.Addr
 		instruction.LeftOp = fmt.Sprintf("%X", leftOp)
 	}
 	case 0x06: {
 		instruction.Name = "LD"
-		leftOp := inst[0] & 0x0F
-		rightOp := instruction.Opcode & 0xFF
+		leftOp := opcode.NibbleX
+		rightOp := opcode.LowerByte
 		instruction.LeftOp = fmt.Sprintf("V%d", leftOp)
 		instruction.RightOp = fmt.Sprintf("%X", rightOp)
 	}
 	case 0x07: {
 		instruction.Name = "ADD"
-		leftOp := inst[0] & 0x0F
-		rightOp := instruction.Opcode & 0xFF
+		leftOp := opcode.NibbleX
+		rightOp := opcode.LowerByte
 		instruction.LeftOp = fmt.Sprintf("V%d", leftOp)
 		instruction.RightOp = fmt.Sprintf("%X", rightOp)	
 	}
 	case 0x0A: {
 		instruction.Name = "LD"
-		rightOp := instruction.Opcode & 0xFFF
+		rightOp := opcode.Addr
 		instruction.LeftOp = "I"
 		instruction.RightOp = fmt.Sprintf("%X", rightOp)
 	}
 	case 0x0D: {
 		instruction.Name = "DRW"
-		x := inst[0] & 0x0F
-		y := (inst[1] >> 4)
-		n := inst[1] & 0x0F
+		x := opcode.NibbleX
+		y := opcode.NibbleY
+		n := opcode.NibbleLower
 		instruction.LeftOp = fmt.Sprintf("V%d", x)
 		instruction.RightOp = fmt.Sprintf("V%d,%d", y, n)
 	}
