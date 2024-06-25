@@ -61,20 +61,17 @@ func (vm *VirtualMachine) loadSpritesInMemory() {
 // Run is the main entry point for the VM
 // it repeatedly goes through the fetch/execute cycle
 func (vm *VirtualMachine) Run() error {
-	emulatorLoop:
 	for {
-		select {
-			case <- vm.Clk.C: {
-				instruction, end := vm.fetch()
-				if end {
-					vm.Clk.Stop()
-					break emulatorLoop
-				}
-				err := vm.execute(instruction)
-				if err != nil {
-					return fmt.Errorf("could not execute instruction: %v", err)
-				}
-			}
+		// Wait for tick before proceedin
+		<- vm.Clk.C	
+		instruction, end := vm.fetch()
+		if end {
+			vm.Clk.Stop()
+			break
+		}
+		err := vm.execute(instruction)
+		if err != nil {
+			return fmt.Errorf("could not execute instruction: %v", err)
 		}
 	}
 	return nil
