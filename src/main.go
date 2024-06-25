@@ -10,10 +10,11 @@ import (
 )
 
 var InputFile string
-
+var ClkSpeed int
 
 func initFlags() {
 	flag.StringVar(&InputFile, "file", "", "File containing CHIP-8 hex code.")
+	flag.IntVar(&ClkSpeed, "clock_speed", 700, "Clock speed of the emulator in Hz.")
 }
 
 func validateFlags() error {
@@ -44,9 +45,8 @@ func main() {
 	vm := interpreter.VirtualMachine{
 		Display: d,
 	}
-	vm.Init(content)
+	vm.Init(content, ClkSpeed)
 	if err := vm.Run(); err != nil {
 		panic(err)
 	}
-
 }

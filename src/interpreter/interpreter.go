@@ -3,6 +3,7 @@ package interpreter
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	common "github.com/abhinand20/emugo/common"
 	disp "github.com/abhinand20/emugo/display"
@@ -37,16 +38,18 @@ type VirtualMachine struct {
 	dt uint8
 	ds uint8
 	r [16]uint8
+	Clk *time.Ticker
 	// TODO: Add support for a stack/SP
 }
 
-func (vm *VirtualMachine) Init(program []byte) {
+func (vm *VirtualMachine) Init(program []byte, clkSpeed int) {
 	for idx := range program {
 		vm.memory[common.ProgramStoreOffsetBytes + idx] = program[idx]
 	}
 	vm.loadSpritesInMemory()
 	vm.pc = common.ProgramStoreOffsetBytes
 	vm.Display.Init()
+	vm.Clk = time.NewTicker(time.Second / time.Duration(clkSpeed))
 }
 
 func (vm *VirtualMachine) loadSpritesInMemory() {
@@ -58,16 +61,20 @@ func (vm *VirtualMachine) loadSpritesInMemory() {
 // Run is the main entry point for the VM
 // it repeatedly goes through the fetch/execute cycle
 func (vm *VirtualMachine) Run() error {
+	emulatorLoop:
 	for {
-		// TODO: Adjust once frequency is implemented
-		instruction, done := vm.fetch()
-		if done {
-			fmt.Println("Done!")
-			break
-		}
-		err := vm.execute(instruction)
-		if err != nil {
-			return fmt.Errorf("could not execute instruction: %v", err)
+		select {
+			case <- vm.Clk.C: {
+				instruction, end := vm.fetch()
+				if end {
+					vm.Clk.Stop()
+					break emulatorLoop
+				}
+				err := vm.execute(instruction)
+				if err != nil {
+					return fmt.Errorf("could not execute instruction: %v", err)
+				}
+			}
 		}
 	}
 	return nil
