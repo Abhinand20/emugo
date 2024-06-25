@@ -102,3 +102,15 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 	}
 	return nil
 }
+
+func (vm *VirtualMachine) setVF() {
+	vm.r[len(vm.r) - 1] = 1
+}
+
+func (vm *VirtualMachine) resetVF() {
+	vm.r[len(vm.r) - 1] = 0
+}
+
+func (vm *VirtualMachine) isVFSet() bool {
+	return vm.r[len(vm.r) - 1] == 1
+}

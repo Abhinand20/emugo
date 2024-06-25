@@ -8,7 +8,7 @@ type Display interface {
 	Clear()
 	// Update the internal states to setup rendering
 	// based on the draw instruction operands
-	UpdateState(*[4096]byte, uint16, byte, byte, byte)
+	UpdateState(*[4096]byte, uint16, byte, byte, byte) bool
 	// Reneder called for each display instruction execution
 	Render()
 }

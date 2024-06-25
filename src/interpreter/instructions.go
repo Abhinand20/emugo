@@ -27,6 +27,9 @@ func (vm *VirtualMachine) _LDI(addr uint16) {
 func (vm *VirtualMachine) _DRW(x, y, n byte) {
 	vx := vm.r[x]
 	vy := vm.r[y]
-	vm.Display.UpdateState(&vm.memory, vm.i, vx, vy, n)
+	collision := vm.Display.UpdateState(&vm.memory, vm.i, vx, vy, n)
 	vm.Display.Render()
+	if collision {
+		vm.setVF()
+	}
 }

@@ -23,19 +23,27 @@ func (t *TerminalDisplay) Clear() {
 	t.resetGrid()
 }
 
-func (t *TerminalDisplay) UpdateState(memory *[4096]byte, i uint16, vx, vy, n byte) {
+func (t *TerminalDisplay) UpdateState(memory *[4096]byte, i uint16, vx, vy, n byte) bool {
 	// TODO: Handle 1) wrapping behavior 2) Setting VF for collisions
 	var ib uint8 = 0
+	var collision bool = false
 	for ib < n {
 		spriteRow := memory[i + uint16(ib)]
 		// XOR with all pixels in this row
 		var idx uint8 = 0
 		for idx < 8 {
-			t.Grid[vy + ib][vx + idx] ^= ((spriteRow >> (7 - idx)) & 0x1)
+			currRow := vy + ib
+			currCol := vx + idx
+			prevSet := t.Grid[currRow][currCol]
+			t.Grid[currRow][currCol] ^= ((spriteRow >> (7 - idx)) & 0x1)
+			if prevSet == 1 && t.Grid[currRow][currCol] == 0 {
+				collision = true
+			}
 			idx++
 		}
 		ib++
 	}
+	return collision
 }
 
 func (t *TerminalDisplay) Render() {
