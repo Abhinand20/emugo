@@ -31,5 +31,7 @@ func (vm *VirtualMachine) _DRW(x, y, n byte) {
 	vm.Display.Render()
 	if collision {
 		vm.setVF()
+		return
 	}
+	vm.resetVF()
 }

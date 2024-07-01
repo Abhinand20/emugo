@@ -62,7 +62,7 @@ func (vm *VirtualMachine) loadSpritesInMemory() {
 // it repeatedly goes through the fetch/execute cycle
 func (vm *VirtualMachine) Run() error {
 	for {
-		// Wait for tick before proceedin
+		// Wait for tick before proceeding
 		<- vm.Clk.C	
 		instruction, end := vm.fetch()
 		if end {
