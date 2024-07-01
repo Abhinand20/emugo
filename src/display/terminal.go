@@ -47,7 +47,8 @@ func (t *TerminalDisplay) UpdateState(memory *[4096]byte, i uint16, vx, vy, n by
 }
 
 func (t *TerminalDisplay) Render() {
-	fmt.Print("\033[H")
+	// Hacky way to clear terminal in macOS/linux, won't work on windows.
+	fmt.Print("\033[H\033[2J")
 	t.drawHorizontalBorder()
 	for i := range t.Grid {
 		fmt.Print("|")

@@ -1,8 +1,11 @@
 package interpreter
 
 import (
+	"bufio"
 	"encoding/binary"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	common "github.com/abhinand20/emugo/common"
@@ -40,6 +43,9 @@ type VirtualMachine struct {
 	r [16]uint8
 	Clk *time.Ticker
 	// TODO: Add support for a stack/SP
+	
+	/* States useful for debug mode */
+	Debug bool
 }
 
 func (vm *VirtualMachine) Init(program []byte, clkSpeed int) {
@@ -63,7 +69,21 @@ func (vm *VirtualMachine) loadSpritesInMemory() {
 func (vm *VirtualMachine) Run() error {
 	for {
 		// Wait for tick before proceeding
-		<- vm.Clk.C	
+		<- vm.Clk.C
+		if vm.Debug {
+			instrBytes := vm.memory[vm.pc : vm.pc+2]
+			debugInst := common.ParseHexInstruction(instrBytes, int(vm.pc))
+			fmt.Print("> ")
+			debugInst.Print()
+			reader := bufio.NewReader(os.Stdin)
+			// TODO(abhinandj): Add support for breakpoints.
+			for {
+				input, _ := reader.ReadString('\n')
+				if strings.ToLower(input) == "n\n" {
+					break
+				}
+			}
+		}
 		instruction, end := vm.fetch()
 		if end {
 			vm.Clk.Stop()

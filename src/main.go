@@ -9,16 +9,18 @@ import (
 	"github.com/abhinand20/emugo/interpreter"
 )
 
-var InputFile string
-var ClkSpeed int
+var inputFile string
+var clkSpeed int
+var debug bool
 
 func initFlags() {
-	flag.StringVar(&InputFile, "file", "", "File containing CHIP-8 hex code.")
-	flag.IntVar(&ClkSpeed, "clock_speed", 700, "Clock speed of the emulator in Hz.")
+	flag.StringVar(&inputFile, "file", "", "File containing CHIP-8 hex code.")
+	flag.IntVar(&clkSpeed, "clock_speed", 700, "Clock speed of the emulator in Hz.")
+	flag.BoolVar(&debug, "debug", false, "Run debugger.")
 }
 
 func validateFlags() error {
-	if len(InputFile) == 0 {
+	if len(inputFile) == 0 {
 		return fmt.Errorf("input file not provided")
 	}
 	return nil
@@ -32,7 +34,7 @@ func main() {
 		fmt.Printf("err: %v\n", err)
 		return
 	}
-	content, err := common.ReadFile(InputFile)
+	content, err := common.ReadFile(inputFile)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 		return
@@ -44,8 +46,12 @@ func main() {
 	d.Init()
 	vm := interpreter.VirtualMachine{
 		Display: d,
+		Debug: debug,
 	}
-	vm.Init(content, ClkSpeed)
+	vm.Init(content, clkSpeed)
+	if debug {
+		fmt.Println("Running debugger...\nEnter 'n' to step through instructions!")
+	}
 	if err := vm.Run(); err != nil {
 		panic(err)
 	}
