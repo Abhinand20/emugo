@@ -32,8 +32,8 @@ func (t *TerminalDisplay) UpdateState(memory *[4096]byte, i uint16, vx, vy, n by
 		// XOR with all pixels in this row
 		var idx uint8 = 0
 		for idx < 8 {
-			currRow := vy + ib
-			currCol := vx + idx
+			currRow := (vy + ib) % byte(t.Height)
+			currCol := (vx + idx) % byte(t.Width)
 			prevSet := t.Grid[currRow][currCol]
 			t.Grid[currRow][currCol] ^= ((spriteRow >> (7 - idx)) & 0x1)
 			if prevSet == 1 && t.Grid[currRow][currCol] == 0 {
