@@ -168,6 +168,6 @@ func (vm *VirtualMachine) isVFSet() bool {
 }
 
 func (vm *VirtualMachine) isOverflow(x, y byte) bool {
-	res := int(x) + int(y)
-	return res > 255
+	res := x + y
+	return !((res > x) == (y > 0))
 }
