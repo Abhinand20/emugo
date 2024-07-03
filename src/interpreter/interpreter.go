@@ -141,6 +141,15 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 	}
 	case 0x0A: vm._LDI(opcode.Addr)
 	case 0x0D: vm._DRW(opcode.NibbleX, opcode.NibbleY, opcode.NibbleLower)
+	case 0x0F: {
+		switch opcode.LowerByte {
+			case 0x1E: vm._ADDI(opcode.NibbleX)
+			case 0x33: vm._LDBCD(opcode.NibbleX)
+			case 0x55: vm._STR(opcode.NibbleX)
+			case 0x65: vm._LDR(opcode.NibbleX)
+			default: return common.UnknownOpcodeErr(opcode.Opcode)
+		}
+	}
 	default: return common.UnknownOpcodeErr(opcode.Opcode)
 	}
 	return nil

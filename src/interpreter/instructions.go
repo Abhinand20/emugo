@@ -126,6 +126,38 @@ func (vm *VirtualMachine) _SHL(x byte) {
 	vm.r[x] <<= 1
 }
 
+// OPCODE: Fx65
+func (vm *VirtualMachine) _LDR(x byte) {
+	readAddr := vm.i
+	for idx := byte(0); idx <= x; idx++ {
+		vm.r[idx] = vm.memory[readAddr]
+		readAddr++
+	}
+}
+
+// OPCODE: Fx55
+func (vm *VirtualMachine) _STR(x byte) {
+	storeAddr := vm.i
+	for idx := byte(0); idx <= x; idx++ {
+		vm.memory[storeAddr] = vm.r[idx]
+		storeAddr++
+	}
+}
+
+// OPCODE: Fx33
+func (vm *VirtualMachine) _LDBCD(x byte) {
+	vm.memory[vm.i] = vm.r[x] / 100
+	vm.memory[vm.i + 1] = (vm.r[x] / 10) % 10
+	vm.memory[vm.i + 2] = vm.r[x] % 10
+}
+
+
+// OPCODE: Fx1E
+func (vm *VirtualMachine) _ADDI(x byte) {
+	vm.i += uint16(vm.r[x])
+}
+
+
 func (vm *VirtualMachine) _ADDVal(x, val byte) {
 	vm.r[x] += val
 }

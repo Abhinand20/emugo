@@ -15,7 +15,6 @@ const (
 )
 
 
-
 func initFlags() {
 	flag.StringVar(&InputFile, "file", "", "File containing CHIP-8 hex code.")
 }
