@@ -156,17 +156,18 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 }
 
 func (vm *VirtualMachine) setVF() {
-	vm.r[len(vm.r) - 1] = 1
+	vm.r[0xF] = 1
 }
 
 func (vm *VirtualMachine) resetVF() {
-	vm.r[len(vm.r) - 1] = 0
+	vm.r[0xF] = 0
 }
 
 func (vm *VirtualMachine) isVFSet() bool {
-	return vm.r[len(vm.r) - 1] == 1
+	return vm.r[0xF] == 1
 }
 
 func (vm *VirtualMachine) isOverflow(x, y byte) bool {
-	return ((x >> 7) & (y >> 7)) == 1
+	res := int(x) + int(y)
+	return res > 255
 }
