@@ -7,7 +7,9 @@ func (vm *VirtualMachine) _CLS() {
 // OPCODE: 00EE
 func (vm *VirtualMachine) _RET() {
 	vm.pc = vm.stack[vm.sp]
-	vm.sp -= 1
+	if vm.sp != 0 {
+		vm.sp -= 1
+	}
 }
 
 // OPCODE: 2nnn
@@ -15,9 +17,11 @@ func (vm *VirtualMachine) _CALL(addr uint16) {
 	if vm.sp >= uint16(len(vm.stack)) {
 		panic("[Stack Overflow] Cannot execute instruction.")
 	}
+	if vm.sp != 0 {
+		vm.sp += 1
+	}
 	vm.stack[vm.sp] = vm.pc
 	vm.pc = addr
-	vm.sp += 1
 }
 
 func (vm *VirtualMachine) _JP(addr uint16) {
