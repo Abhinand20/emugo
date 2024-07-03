@@ -125,6 +125,20 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 	case 0x09: vm._SNE(opcode.NibbleX, opcode.NibbleY)
 	case 0x06: vm._LDVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x07: vm._ADDVal(opcode.NibbleX, opcode.LowerByte)
+	case 0x08: {
+		switch opcode.NibbleLower {
+			case 0x00: vm._LD(opcode.NibbleX, opcode.NibbleY)
+			case 0x01: vm._OR(opcode.NibbleX, opcode.NibbleY)
+			case 0x02: vm._AND(opcode.NibbleX, opcode.NibbleY)
+			case 0x03: vm._XOR(opcode.NibbleX, opcode.NibbleY)
+			case 0x04: vm._ADD(opcode.NibbleX, opcode.NibbleY)
+			case 0x05: vm._SUB(opcode.NibbleX, opcode.NibbleY)
+			case 0x06: vm._SHR(opcode.NibbleX)
+			case 0x07: vm._SUBN(opcode.NibbleX, opcode.NibbleY)
+			case 0x0E: vm._SHL(opcode.NibbleX)
+			default: return common.UnknownOpcodeErr(opcode.Opcode)
+		}
+	}
 	case 0x0A: vm._LDI(opcode.Addr)
 	case 0x0D: vm._DRW(opcode.NibbleX, opcode.NibbleY, opcode.NibbleLower)
 	default: return common.UnknownOpcodeErr(opcode.Opcode)
@@ -142,4 +156,8 @@ func (vm *VirtualMachine) resetVF() {
 
 func (vm *VirtualMachine) isVFSet() bool {
 	return vm.r[len(vm.r) - 1] == 1
+}
+
+func (vm *VirtualMachine) isOverflow(x, y byte) bool {
+	return ((x >> 7) & (y >> 7)) == 1
 }

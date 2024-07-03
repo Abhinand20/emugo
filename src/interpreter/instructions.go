@@ -61,6 +61,71 @@ func (vm *VirtualMachine) _LDVal(x, val byte) {
 	vm.r[x] = val
 }
 
+// OPCODE: 8xy0
+func (vm *VirtualMachine) _LD(x, y byte) {
+	vm.r[x] = vm.r[y]
+}
+
+// OPCODE: 8xy1
+func (vm *VirtualMachine) _OR(x, y byte) {
+	vm.r[x] |= vm.r[y]
+}
+
+// OPCODE: 8xy2
+func (vm *VirtualMachine) _AND(x, y byte) {
+	vm.r[x] &= vm.r[y]
+}
+
+// OPCODE: 8xy3
+func (vm *VirtualMachine) _XOR(x, y byte) {
+	vm.r[x] ^= vm.r[y]
+}
+
+// OPCODE: 8xy4
+func (vm *VirtualMachine) _ADD(x, y byte) {
+	vm.resetVF()
+	vm.r[x] += vm.r[y]
+	if vm.isOverflow(vm.r[x], vm.r[y]) {
+		vm.setVF()
+	}
+}
+
+// OPCODE: 8xy5
+func (vm *VirtualMachine) _SUB(x, y byte) {
+	vm.resetVF()
+	if vm.r[x] > vm.r[y] {
+		vm.setVF()
+	}
+	vm.r[x] -= vm.r[y]
+}
+
+// OPCODE: 8xy6
+func (vm *VirtualMachine) _SHR(x byte) {
+	vm.resetVF()
+	if (vm.r[x] & 0x1) == 1 {
+		vm.setVF()
+	}
+	vm.r[x] >>= 1
+}
+
+// OPCODE: 8xy7
+func (vm *VirtualMachine) _SUBN(x, y byte) {
+	vm.resetVF()
+	if vm.r[y] > vm.r[x] {
+		vm.setVF()
+	}
+	vm.r[x] = vm.r[y] - vm.r[x]
+}
+
+// OPCODE: 8xyE
+func (vm *VirtualMachine) _SHL(x byte) {
+	vm.resetVF()
+	if (vm.r[x] >> 7) & 0x1 == 1 {
+		vm.setVF()
+	}
+	vm.r[x] <<= 1
+}
+
 func (vm *VirtualMachine) _ADDVal(x, val byte) {
 	vm.r[x] += val
 }
