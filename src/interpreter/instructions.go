@@ -4,12 +4,53 @@ func (vm *VirtualMachine) _CLS() {
 	vm.Display.Clear()
 }
 
+// OPCODE: 00EE
 func (vm *VirtualMachine) _RET() {
-	// TODO: implement
+	vm.pc = vm.stack[vm.sp]
+	vm.sp -= 1
+}
+
+// OPCODE: 2nnn
+func (vm *VirtualMachine) _CALL(addr uint16) {
+	if vm.sp >= uint16(len(vm.stack)) {
+		panic("[Stack Overflow] Cannot execute instruction.")
+	}
+	vm.stack[vm.sp] = vm.pc
+	vm.pc = addr
+	vm.sp += 1
 }
 
 func (vm *VirtualMachine) _JP(addr uint16) {
 	vm.pc = addr
+}
+
+// OPCODE: 3xkk
+func (vm *VirtualMachine) _SEVal(x, kk byte) {
+	if vm.r[x] == kk {
+		vm.pc += 2
+	}
+}
+
+// OPCODE: 4xkk
+func (vm *VirtualMachine) _SNEVal(x, kk byte) {
+	if vm.r[x] != kk {
+		vm.pc += 2
+	}
+}
+
+// OPCODE: 5xy0
+func (vm *VirtualMachine) _SE(x, y byte) {
+	if vm.r[x] == vm.r[y] {
+		vm.pc += 2
+	}
+}
+
+
+// OPCODE: 9xy0
+func (vm *VirtualMachine) _SNE(x, y byte) {
+	if vm.r[x] != vm.r[y] {
+		vm.pc += 2
+	}
 }
 
 func (vm *VirtualMachine) _LDVal(x, val byte) {

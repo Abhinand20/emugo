@@ -42,8 +42,8 @@ type VirtualMachine struct {
 	ds uint8
 	r [16]uint8
 	Clk *time.Ticker
-	// TODO: Add support for a stack/SP
-	
+	sp uint16
+	stack [16]uint16
 	/* States useful for debug mode */
 	Debug bool
 }
@@ -118,6 +118,11 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 		}
 	}
 	case 0x01: vm._JP(opcode.Addr)
+	case 0x02: vm._CALL(opcode.Addr)
+	case 0x03: vm._SEVal(opcode.NibbleX, opcode.LowerByte)
+	case 0x04: vm._SNEVal(opcode.NibbleX, opcode.LowerByte)
+	case 0x05: vm._SE(opcode.NibbleX, opcode.NibbleY)
+	case 0x09: vm._SNE(opcode.NibbleX, opcode.NibbleY)
 	case 0x06: vm._LDVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x07: vm._ADDVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x0A: vm._LDI(opcode.Addr)
