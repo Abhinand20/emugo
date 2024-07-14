@@ -10,6 +10,7 @@ import (
 
 	common "github.com/abhinand20/emugo/common"
 	disp "github.com/abhinand20/emugo/display"
+	"github.com/abhinand20/emugo/input"
 )
 
 var spriteData = []byte{
@@ -44,6 +45,7 @@ type VirtualMachine struct {
 	Clk *time.Ticker
 	sp uint16
 	stack [16]uint16
+	Keyboard *input.Keyboard
 	/* States useful for debug mode */
 	Debug bool
 }
@@ -67,6 +69,7 @@ func (vm *VirtualMachine) loadSpritesInMemory() {
 // Run is the main entry point for the VM
 // it repeatedly goes through the fetch/execute cycle
 func (vm *VirtualMachine) Run() error {
+	vm.Keyboard.Start()
 	for {
 		// Wait for tick before proceeding
 		<- vm.Clk.C
@@ -94,6 +97,7 @@ func (vm *VirtualMachine) Run() error {
 			return fmt.Errorf("could not execute instruction: %v", err)
 		}
 	}
+	vm.Keyboard.Stop()
 	return nil
 }
 

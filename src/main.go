@@ -6,6 +6,7 @@ import (
 
 	common "github.com/abhinand20/emugo/common"
 	disp "github.com/abhinand20/emugo/display"
+	"github.com/abhinand20/emugo/input"
 	"github.com/abhinand20/emugo/interpreter"
 )
 
@@ -44,8 +45,10 @@ func main() {
 		Width: 64,
 	}
 	d.Init()
+	kb := &input.Keyboard{}
 	vm := interpreter.VirtualMachine{
 		Display: d,
+		Keyboard: kb,
 		Debug: debug,
 	}
 	vm.Init(content, clkSpeed)
