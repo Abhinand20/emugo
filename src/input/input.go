@@ -1,20 +1,30 @@
 package input
 
 import (
+	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/eiannone/keyboard"
 )
 
 
 type Keyboard struct {
-	currentKey uint8
-	isKeyHeld bool
+	currentKeysPressed [16]bool
+	prevKeysPressed [16]bool
+	tempKeysPressed [16]bool
+	// approximate key releases using delay between key press events
+	keysDown map[byte]time.Time
 	mu sync.Mutex
 }
 
-var keyMap = map[string]uint8{
+const (
+	releaseDelay = time.Second / 5
+	keyChannelSize = 20
+)
+
+var KeyMap = map[string]byte{
 	"0": 0x0,
 	"1": 0x1,
 	"2": 0x2,
@@ -25,17 +35,16 @@ var keyMap = map[string]uint8{
 	"7": 0x7,
 	"8": 0x8,
 	"9": 0x9,
-	"a": 0x10,
-	"b": 0x11,
-	"c": 0x12,
-	"d": 0x13,
-	"e": 0x14,
-	"f": 0x15,
+	"a": 0x0A,
+	"b": 0x0B,
+	"c": 0x0C,
+	"d": 0x0D,
+	"e": 0x0E,
+	"f": 0x0F,
 }
 
 func (kb *Keyboard) Start() {
-	keyboard.Open()
-	kb.currentKey = 255
+	kb.keysDown = make(map[byte]time.Time)
 	go kb.listner()
 }
 
@@ -43,31 +52,67 @@ func (kb *Keyboard) Stop() {
 	keyboard.Close()
 }
 
-// Returns the current pressed key, and whether it is being held down.
-func (kb *Keyboard) GetPressedKey() (uint8, bool) {
-	return kb.currentKey, kb.isKeyHeld
+// DoKeyEventUpdates tracks key presses and releases. It should be called 
+// on every exection cycle to periodically keep track of keys.
+func (kb *Keyboard) DoKeyEventUpdates() {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+	kb.prevKeysPressed = kb.currentKeysPressed
+	kb.currentKeysPressed = kb.tempKeysPressed
+}
+
+func (kb *Keyboard) JustPressed(key byte) bool {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+	return kb.currentKeysPressed[key] && !kb.prevKeysPressed[key]
+}
+
+func (kb *Keyboard) JustReleased(key byte) bool {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+	return !kb.currentKeysPressed[key] && kb.prevKeysPressed[key]
+}
+
+func (kb *Keyboard) IsPressed(key byte) bool {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+	return kb.currentKeysPressed[key]
 }
 
 func (kb *Keyboard) listner() {
+	// Create a channel to poll for key inputs
+	keysEvents, err := keyboard.GetKeys(keyChannelSize)
+	if err != nil {
+		panic(err)
+	}
 	for {
-		charRune, key, err := keyboard.GetKey()
-		if err != nil {
-			panic(err)
-		}
-        if key == keyboard.KeyCtrlC {
-			keyboard.Close()
-			break
-		}
-		pressedChar := strings.ToLower(string(charRune))
-		if charIdx, ok := keyMap[pressedChar]; ok {
-			kb.mu.Lock()
-			if charIdx == kb.currentKey {
-				kb.isKeyHeld = true
-			} else {
-				kb.isKeyHeld = false
+		select {
+		case event := <-keysEvents: {
+			pressedChar := strings.ToLower(string(event.Rune))
+			if event.Key == keyboard.KeyCtrlC {
+				fmt.Printf("Press <Ctrl-c> once again to exit!\n")
+				keyboard.Close()
+				return	
 			}
-			kb.currentKey = charIdx
-			kb.mu.Unlock()
+			if charIdx, ok := KeyMap[pressedChar]; ok {
+				kb.mu.Lock()
+				kb.keysDown[charIdx] = time.Now()
+				kb.tempKeysPressed[charIdx] = true
+				kb.mu.Unlock()
+			}
+		}
+		default: {
+			now := time.Now()
+			for k, t := range kb.keysDown {
+				if now.Sub(t) >= releaseDelay {
+					kb.mu.Lock()
+					// Mark key as released
+					delete(kb.keysDown, k)
+					kb.tempKeysPressed[k] = false
+					kb.mu.Unlock()
+				}
+			}
+		}
 		}
 	}
 }

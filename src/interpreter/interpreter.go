@@ -45,6 +45,7 @@ type VirtualMachine struct {
 	Clk *time.Ticker
 	sp uint16
 	stack [16]uint16
+	keypad [16]bool
 	Keyboard *input.Keyboard
 	/* States useful for debug mode */
 	Debug bool
@@ -70,6 +71,8 @@ func (vm *VirtualMachine) loadSpritesInMemory() {
 // it repeatedly goes through the fetch/execute cycle
 func (vm *VirtualMachine) Run() error {
 	vm.Keyboard.Start()
+	go vm.delayTimerTick()
+	go vm.soundTimerTick()
 	for {
 		// Wait for tick before proceeding
 		<- vm.Clk.C
@@ -96,11 +99,44 @@ func (vm *VirtualMachine) Run() error {
 		if err != nil {
 			return fmt.Errorf("could not execute instruction: %v", err)
 		}
+		vm.handleKeyInputs()
 	}
 	vm.Keyboard.Stop()
 	return nil
 }
 
+
+func (vm *VirtualMachine) delayTimerTick() {
+	for {
+		<- vm.Clk.C
+		if vm.dt > 0 {
+			vm.dt -= 1
+		}
+	}
+}
+
+func (vm *VirtualMachine) soundTimerTick() {
+	for {
+		<- vm.Clk.C
+		if vm.ds > 0 {
+			vm.ds -= 1
+			// TODO: Add support for :beep: sound.
+		}
+	}
+}
+
+func (vm *VirtualMachine) setKeyDown(index byte) {
+	vm.keypad[index] = true
+}
+
+func (vm *VirtualMachine) handleKeyInputs() {
+	vm.Keyboard.DoKeyEventUpdates()
+	for _, idx := range input.KeyMap {
+		if vm.Keyboard.IsPressed(idx) {
+			vm.setKeyDown(idx)
+		}
+	}
+}
 
 func (vm *VirtualMachine) fetch() (*common.Opcode, bool) {
 	if vm.pc >= uint16(len(vm.memory)) {
@@ -131,27 +167,37 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 	case 0x07: vm._ADDVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x08: {
 		switch opcode.NibbleLower {
-			case 0x00: vm._LD(opcode.NibbleX, opcode.NibbleY)
-			case 0x01: vm._OR(opcode.NibbleX, opcode.NibbleY)
-			case 0x02: vm._AND(opcode.NibbleX, opcode.NibbleY)
-			case 0x03: vm._XOR(opcode.NibbleX, opcode.NibbleY)
-			case 0x04: vm._ADD(opcode.NibbleX, opcode.NibbleY)
-			case 0x05: vm._SUB(opcode.NibbleX, opcode.NibbleY)
-			case 0x06: vm._SHR(opcode.NibbleX)
-			case 0x07: vm._SUBN(opcode.NibbleX, opcode.NibbleY)
-			case 0x0E: vm._SHL(opcode.NibbleX)
-			default: return common.UnknownOpcodeErr(opcode.Opcode)
+		case 0x00: vm._LD(opcode.NibbleX, opcode.NibbleY)
+		case 0x01: vm._OR(opcode.NibbleX, opcode.NibbleY)
+		case 0x02: vm._AND(opcode.NibbleX, opcode.NibbleY)
+		case 0x03: vm._XOR(opcode.NibbleX, opcode.NibbleY)
+		case 0x04: vm._ADD(opcode.NibbleX, opcode.NibbleY)
+		case 0x05: vm._SUB(opcode.NibbleX, opcode.NibbleY)
+		case 0x06: vm._SHR(opcode.NibbleX)
+		case 0x07: vm._SUBN(opcode.NibbleX, opcode.NibbleY)
+		case 0x0E: vm._SHL(opcode.NibbleX)
+		default: return common.UnknownOpcodeErr(opcode.Opcode)
 		}
 	}
 	case 0x0A: vm._LDI(opcode.Addr)
 	case 0x0D: vm._DRW(opcode.NibbleX, opcode.NibbleY, opcode.NibbleLower)
+	case 0x0E: {
+		switch opcode.LowerByte {
+		case 0x9E: vm._SKP(opcode.NibbleX)
+		case 0xA1: vm._SKPN(opcode.NibbleX)
+		}
+	}
 	case 0x0F: {
 		switch opcode.LowerByte {
-			case 0x1E: vm._ADDI(opcode.NibbleX)
-			case 0x33: vm._LDBCD(opcode.NibbleX)
-			case 0x55: vm._STR(opcode.NibbleX)
-			case 0x65: vm._LDR(opcode.NibbleX)
-			default: return common.UnknownOpcodeErr(opcode.Opcode)
+		case 0x0A: vm._LDKEY(opcode.NibbleX)
+		case 0x07: vm._STRDT(opcode.NibbleX)
+		case 0x15: vm._LDDT(opcode.NibbleX)
+		case 0x18: vm._LDDS(opcode.NibbleX)
+		case 0x1E: vm._ADDI(opcode.NibbleX)
+		case 0x33: vm._LDBCD(opcode.NibbleX)
+		case 0x55: vm._STR(opcode.NibbleX)
+		case 0x65: vm._LDR(opcode.NibbleX)
+		default: return common.UnknownOpcodeErr(opcode.Opcode)
 		}
 	}
 	default: return common.UnknownOpcodeErr(opcode.Opcode)

@@ -1,5 +1,7 @@
 package interpreter
 
+import "github.com/abhinand20/emugo/input"
+
 func (vm *VirtualMachine) _CLS() {
 	vm.Display.Clear()
 }
@@ -183,5 +185,40 @@ func (vm *VirtualMachine) _DRW(x, y, n byte) {
 	vm.resetVF()
 	if collision {
 		vm.setVF()
+	}
+}
+
+// OPCODE: FX0A
+func (vm *VirtualMachine) _LDKEY(x byte) {
+	for _, idx := range input.KeyMap {
+		if vm.keypad[idx] {
+			vm.r[x] = idx
+			return
+		}
+	}
+	vm.pc -= 2
+}
+
+func (vm *VirtualMachine) _LDDS(x byte) {
+	vm.ds = vm.r[x]
+}
+
+func (vm *VirtualMachine) _LDDT(x byte) {
+	vm.dt = vm.r[x]
+}
+
+func (vm *VirtualMachine) _STRDT(x byte) {
+	vm.r[x] = vm.dt
+}
+
+func (vm *VirtualMachine) _SKP(x byte) {
+	if vm.keypad[vm.r[x]] {
+		vm.pc += 2
+	}
+}
+
+func (vm *VirtualMachine) _SKPN(x byte) {
+	if !vm.keypad[vm.r[x]] {
+		vm.pc += 2
 	}
 }
