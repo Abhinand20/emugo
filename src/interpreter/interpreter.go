@@ -129,11 +129,19 @@ func (vm *VirtualMachine) setKeyDown(index byte) {
 	vm.keypad[index] = true
 }
 
+func (vm *VirtualMachine) setKeyUp(index byte) {
+	vm.keypad[index] = false
+}
+
+// TODO: Need to add a delay/timer to handle timing issues.
 func (vm *VirtualMachine) handleKeyInputs() {
 	vm.Keyboard.DoKeyEventUpdates()
 	for _, idx := range input.KeyMap {
 		if vm.Keyboard.IsPressed(idx) {
 			vm.setKeyDown(idx)
+			// fmt.Printf("Pressed %X\n", idx)
+		} else {
+			vm.setKeyUp(idx)
 		}
 	}
 }
