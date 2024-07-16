@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -49,6 +50,7 @@ type VirtualMachine struct {
 	Keyboard *input.Keyboard
 	/* States useful for debug mode */
 	Debug bool
+	rng *rand.Rand
 }
 
 func (vm *VirtualMachine) Init(program []byte, clkSpeed int) {
@@ -59,6 +61,7 @@ func (vm *VirtualMachine) Init(program []byte, clkSpeed int) {
 	vm.pc = common.ProgramStoreOffsetBytes
 	vm.Display.Init()
 	vm.Clk = time.NewTicker(time.Second / time.Duration(clkSpeed))
+	vm.rng = rand.New(rand.NewSource(0))
 }
 
 func (vm *VirtualMachine) loadSpritesInMemory() {
@@ -170,7 +173,6 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 	case 0x03: vm._SEVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x04: vm._SNEVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x05: vm._SE(opcode.NibbleX, opcode.NibbleY)
-	case 0x09: vm._SNE(opcode.NibbleX, opcode.NibbleY)
 	case 0x06: vm._LDVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x07: vm._ADDVal(opcode.NibbleX, opcode.LowerByte)
 	case 0x08: {
@@ -187,7 +189,10 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 		default: return common.UnknownOpcodeErr(opcode.Opcode)
 		}
 	}
+	case 0x09: vm._SNE(opcode.NibbleX, opcode.NibbleY)
 	case 0x0A: vm._LDI(opcode.Addr)
+	case 0x0B: vm._JPAddr(opcode.Addr)
+	case 0x0C: vm._RNG(opcode.NibbleX, opcode.LowerByte)
 	case 0x0D: vm._DRW(opcode.NibbleX, opcode.NibbleY, opcode.NibbleLower)
 	case 0x0E: {
 		switch opcode.LowerByte {
@@ -202,6 +207,7 @@ func (vm *VirtualMachine) execute(opcode *common.Opcode) error {
 		case 0x15: vm._LDDT(opcode.NibbleX)
 		case 0x18: vm._LDDS(opcode.NibbleX)
 		case 0x1E: vm._ADDI(opcode.NibbleX)
+		case 0x29: vm._LDSPRITE(opcode.NibbleX)
 		case 0x33: vm._LDBCD(opcode.NibbleX)
 		case 0x55: vm._STR(opcode.NibbleX)
 		case 0x65: vm._LDR(opcode.NibbleX)

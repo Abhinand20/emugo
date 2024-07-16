@@ -1,7 +1,11 @@
 package interpreter
 
-import "github.com/abhinand20/emugo/input"
+import (
+	common "github.com/abhinand20/emugo/common"
+	"github.com/abhinand20/emugo/input"
+)
 
+// OPCODE: 0xE0
 func (vm *VirtualMachine) _CLS() {
 	vm.Display.Clear()
 }
@@ -24,6 +28,7 @@ func (vm *VirtualMachine) _CALL(addr uint16) {
 	vm.pc = addr
 }
 
+// OPCODE: 1nnn
 func (vm *VirtualMachine) _JP(addr uint16) {
 	vm.pc = addr
 }
@@ -168,15 +173,17 @@ func (vm *VirtualMachine) _ADDI(x byte) {
 	vm.i += uint16(vm.r[x])
 }
 
-
+// OPCODE: 7xnn
 func (vm *VirtualMachine) _ADDVal(x, val byte) {
 	vm.r[x] += val
 }
 
+// OPCODE: Annn
 func (vm *VirtualMachine) _LDI(addr uint16) {
 	vm.i = addr
 }
 
+// OPCODE: Dxyn
 func (vm *VirtualMachine) _DRW(x, y, n byte) {
 	vx := vm.r[x]
 	vy := vm.r[y]
@@ -199,26 +206,47 @@ func (vm *VirtualMachine) _LDKEY(x byte) {
 	vm.pc -= 2
 }
 
+// OPCODE: Fx18
 func (vm *VirtualMachine) _LDDS(x byte) {
 	vm.ds = vm.r[x]
 }
 
+// OPCODE: Fx15
 func (vm *VirtualMachine) _LDDT(x byte) {
 	vm.dt = vm.r[x]
 }
 
+// OPCODE: Fx07
 func (vm *VirtualMachine) _STRDT(x byte) {
 	vm.r[x] = vm.dt
 }
 
+// OPCODE: Ex9E
 func (vm *VirtualMachine) _SKP(x byte) {
 	if vm.keypad[vm.r[x]] {
 		vm.pc += 2
 	}
 }
 
+// OPCODE: ExA1
 func (vm *VirtualMachine) _SKPN(x byte) {
 	if !vm.keypad[vm.r[x]] {
 		vm.pc += 2
 	}
+}
+
+// OPCODE: Fx29
+func (vm *VirtualMachine) _LDSPRITE(x byte) {
+	vm.i = uint16(common.SpriteStartOffsetBytes + vm.r[x])
+}
+
+// OPCODE: Cxnn
+func (vm *VirtualMachine) _RNG(x, nn byte) {
+	randByte := byte(vm.rng.Intn(256))
+	vm.r[x] = randByte & nn
+}
+
+// OPCODE: Bnnn
+func (vm *VirtualMachine) _JPAddr(nnn uint16) {
+	vm.pc = uint16(vm.r[0]) + nnn
 }

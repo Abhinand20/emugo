@@ -91,7 +91,7 @@ func (kb *Keyboard) listner() {
 			pressedChar := strings.ToLower(string(event.Rune))
 			if event.Key == keyboard.KeyCtrlC {
 				fmt.Printf("Press <Ctrl-c> once again to exit!\n")
-				keyboard.Close()
+				kb.Stop()
 				return	
 			}
 			if charIdx, ok := KeyMap[pressedChar]; ok {
