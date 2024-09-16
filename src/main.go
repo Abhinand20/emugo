@@ -55,9 +55,6 @@ func main() {
 	if debug {
 		fmt.Println("Running debugger...\nEnter 'n' to step through instructions!")
 	}
-	// kb.Start()
-	// time.Sleep(time.Second * 10)
-	// kb.Stop()
 	if err := vm.Run(); err != nil {
 		panic(err)
 	}
