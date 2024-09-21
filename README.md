@@ -8,7 +8,7 @@ CHIP-8 is a high-level interpreted programming language that was initially creat
 
 This project implements a CHIP-8 interpreter in Golang, capable of loading and executing CHIP-8 programs, including games like Pong, Space Invaders, and more retro fun stuff!
 
-## Why write an emulator for an xx decade old "imaginary" VM now?
+## Why write an emulator for an x decade old "imaginary" VM now?
 
 I decided to write this CHIP-8 interpreter as a quick weekend project to learn about emulation. My primary goal was to understand the foundational concepts behind writing an emulator, particularly how systems interact at a low level — things like memory management, opcode handling, graphics rendering, and input processing.
 
